@@ -19,7 +19,6 @@ import akka.pattern.ask
 import akka.util.Timeout
 import scala.compat.java8.FutureConverters._
 
-
 case class Entry(filename: String, modifiedBy: String)
 
 object WebServer {
@@ -29,13 +28,17 @@ object WebServer {
     // needed for the future flatMap/onComplete in the end
     implicit val executionContext = system.dispatcher
 
-    val route =
-      path("hello") {
+    val route = pathSingleSlash {
         get {
           complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Say hello to akka-http</h1>"))
         }
       } ~
-    path("video") {
+      pathPrefix("app") {
+        encodeResponse {
+          getFromDirectory("app")
+        }
+      } ~
+    path("api/upload") {
       entity(as[Multipart.FormData]) { formData =>
         val allPartsF: Future[Map[String, Any]] = formData.parts.mapAsync[(String, Any)](1) {
           case b: BodyPartEntity if b.name == "file" =>
@@ -61,7 +64,7 @@ object WebServer {
 
     val (host, port) = ("localhost", 8089)
     val bindingFuture = Http().bindAndHandle(route, host, port)
-    println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
+    println(s"Server online at http://$host:$port/\nPress RETURN to stop...")
     StdIn.readLine()
     bindingFuture
       .flatMap(_.unbind())
