@@ -12,7 +12,7 @@ class FileServiceActor extends Actor with ActorLogging {
 
   val conf = ConfigFactory.load()
   val rootPath = conf.getString("kiros.files.root")
-  
+
   def receive = {
     case GetFiles =>
       log.info("Get file list")

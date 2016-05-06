@@ -41,6 +41,7 @@ object WebServer extends App with CorsSupport with SprayJsonSupport {
       "X-Requested-With",
       "Content-Type",
       "Accept",
+      "Authorization",
       "Accept-Encoding",
       "Accept-Language",
       "Host",
@@ -79,25 +80,25 @@ object WebServer extends App with CorsSupport with SprayJsonSupport {
           } ~
             post {
               entity(as[Multipart.FormData]) { formData =>
-                val done = formData.parts.mapAsync(parallelism = 4) { bodyPart => 
-                  bodyPart.entity.dataBytes.runWith(FileIO.toFile(new File(s"$rootPath/${bodyPart.filename}")))
+                val done = formData.parts.mapAsync(parallelism = 4) { bodyPart =>
+                  bodyPart.entity.dataBytes.runWith(FileIO.toFile(new File(s"$rootPath/${bodyPart.filename.get}")))
                 }.runForeach( _ => ())
-                
+
                 onComplete(done) { res =>
                   complete("ok")
                 }
               }
             }
-        } ~ 
+        } ~
         get {
           encodeResponse {
-            getFromDirectory("data")
+            getFromDirectory(s"$rootPath")
           }
         }
       }
     }
 
-  val (host, port) = ("localhost", 8089)
+  val (host, port) = (conf.getString("kiros.files.host"), conf.getInt("kiros.files.port"))
   val bindingFuture = Http().bindAndHandle(route, host, port) //, serverContext)
   println(s"Server online at http://$host:$port/\nPress RETURN to stop...")
   StdIn.readLine()
