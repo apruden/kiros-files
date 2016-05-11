@@ -61,9 +61,9 @@ object WebServer extends App with CorsSupport with SprayJsonSupport {
   implicit val timeout = Timeout(5 seconds)
   val conf = ConfigFactory.load()
   val rootPath = conf.getString("kiros.files.root")
-  
+
   val fileService = system.actorOf(Props[FileServiceActor], name="FileService")
-  
+
   val route = pathSingleSlash {
     get {
       complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "kiros-files"))
@@ -100,9 +100,8 @@ object WebServer extends App with CorsSupport with SprayJsonSupport {
 
   val (host, port) = (conf.getString("kiros.files.host"), conf.getInt("kiros.files.port"))
   val bindingFuture = Http().bindAndHandle(route, host, port) //, serverContext)
-  println(s"Server online at http://$host:$port/\nPress RETURN to stop...")
-  StdIn.readLine()
-  bindingFuture
+  println(s"Server online at http://$host:$port/ ...")
+  sys.addShutdownHook(() => bindingFuture
     .flatMap(_.unbind())
-    .onComplete(_ => system.terminate())
+    .onComplete(_ => system.terminate()))
 }

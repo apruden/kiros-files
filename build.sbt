@@ -2,6 +2,8 @@ name := """kiros-files"""
 
 version := "1.0"
 
+maintainer := "Alex Prudencio <alex.prudencio@gmail.com>"
+
 scalaVersion := "2.11.6"
 
 libraryDependencies ++= Seq(
@@ -14,3 +16,5 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
   "com.typesafe" % "config" % "1.3.0"
   )
+
+enablePlugins(JavaServerAppPackaging)
